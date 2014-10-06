@@ -39,6 +39,10 @@ void setup() {
   Ethernet.begin(mac, ip, gateway, subnet);  
   server.begin();
   
+}
+
+void loop() {
+  
   int chk = DHT.read11(DHT11_PIN);
   switch (chk) {
     case DHTLIB_OK:  
@@ -53,9 +57,7 @@ void setup() {
       //Serial.print("Unknown error,\t"); 
       break;
   }
-}
-
-void loop() {
+  
   delay(500);
   temp = DHT.temperature;
   umid = DHT.humidity;
