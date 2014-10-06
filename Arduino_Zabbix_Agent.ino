@@ -29,6 +29,7 @@ String cmd;               //FOR ZABBIX COMMAND
 int counter = 1;          // For testing 
 int solo = 0;             // Soil humidity
 int limite = 1;           // Command size. Using 1 for better performance.
+int chk = 0;              // Check DHT11
 double temp = 0;          // Temperature
 double umid = 0;          // Humidity
 boolean connected = false;
@@ -43,7 +44,7 @@ void setup() {
 
 void loop() {
   
-  int chk = DHT.read11(DHT11_PIN);
+  chk = DHT.read11(DHT11_PIN);
   switch (chk) {
     case DHTLIB_OK:  
       break;
