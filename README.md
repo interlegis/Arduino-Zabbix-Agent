@@ -10,12 +10,14 @@ It's a Zabbix Agent tested and running successfully.
 
 - Arduino Uno v3
 - Ethernet Shield
-- Arduino Sensor Shield
+- Arduino Sensor Shield*
 - DHT11 (or similar)
 - DS18b20 (or similar)
 - PIR (Passive infrared sensor/Motion detector)
 - Soil humidity sensor
 - Resistors (4.7k and 10k)
+
+###### *A new shield may be built by yourself. 
 
 ##How to use:
 
