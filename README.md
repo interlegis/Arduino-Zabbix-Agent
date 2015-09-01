@@ -15,6 +15,7 @@ It's a Zabbix Agent tested and running successfully.
 - DS18b20 (or similar)
 - PIR (Passive infrared sensor/Motion detector)
 - Soil humidity sensor
+- Resistors (4.7k and 10k)
 
 ##How to use:
 
@@ -50,5 +51,5 @@ All temperature are in Celsius.
 To convert to Fahrenheit,
 `Temp F = 1.8*(Temp C) + 32`
 
-====================
+---
 Zabbix Agent on Arduino Uno v3
