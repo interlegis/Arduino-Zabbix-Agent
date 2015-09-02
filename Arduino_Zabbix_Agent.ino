@@ -1,9 +1,9 @@
-//*****************************************************************************************
+//******************************************************************************
 //* Purpose : Zabbix Sensor Agent - Environmental Monitoring Solution *
 //* Git : https://github.com/interlegis/arduino-zabbix-agent
 //* Author :  Gabriel Ferreira and Marco Rougeth *
-//* https://github.com/gabrielrf and 
-//* https://github.com/rougeth 
+//* https://github.com/gabrielrf and
+//* https://github.com/rougeth
 //* Adapted from : Evgeny Levkov and Schotte Vincent *
 //* Credits: *
 
@@ -11,8 +11,9 @@
 #include <Ethernet.h>
 #include <dht.h>
 #include <OneWire.h>
+#include <string.h>
 
-//  Network settings
+//----------------------------- Network settings -------------------------------
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xE3, 0x1B };
 //IPAddress ip(10, 1, 2, 235);
 IPAddress ip(10, 1, 10, 38);
@@ -20,11 +21,12 @@ IPAddress ip(10, 1, 10, 38);
 IPAddress gateway(10, 1, 10, 254);
 IPAddress subnet(255, 255, 255, 0);
 
-// ----- Pins 10, 11, 12 e 13 are used by ethernet shield! -----
+//------------ Pins 10, 11, 12 e 13 are used by ethernet shield! ---------------
 #define MAX_CMD_LENGTH 25
 #define DHT11_PIN 4            // DHT11 pin
-#define SOIL_PIN A0            // Soil humidity sensor pin
 #define ONE_WIRE_PIN 5         // One wire pin with a 4.7k resistor
+#define PIR_PIN 6              // PIR pin
+#define SOIL_PIN A0            // Soil humidity sensor pin
 
 EthernetServer server(10050);
 EthernetClient client;
@@ -77,12 +79,12 @@ void readOneWire() {
   }
   ds.reset();
   ds.select(addr);
-  ds.write(0x44, 1);          // start conversion, with parasite power on at the end
-  //delay(1000);                // maybe 750ms is enough, maybe not
+  ds.write(0x44, 1);      // start conversion, with parasite power on at the end
+  //delay(1000);          // maybe 750ms is enough, maybe not
   // we might do a ds.depower() here, but the reset will take care of it.
   present = ds.reset();
   ds.select(addr);
-  ds.write(0xBE);             // Read Scratchpad
+  ds.write(0xBE);         // Read Scratchpad
   for ( i = 0; i < 9; i++) {           // we need 9 bytes
     data[i] = ds.read();
   }
@@ -172,26 +174,26 @@ void parseCommand() {     //Commands received by agent on port 10050 parsing
       server.println("Arduino Zabbix Agent 1.0");
       delay(100);
     } // Agent soil humidity
-    else if (cmd.equals("s")) {
+    else if (cmd.equals("q")) {
       readSoil();
       Serial.print(soil);
       server.println(soil);
       // NOT SUPPORTED
     } // Agent air temperature
-    else if (cmd.equals("t")) {
+    else if (cmd.equals("w")) {
       readDHT11();
       Serial.print(temp);
       server.println(temp);
     } // Agent air humidity
-    else if (cmd.equals("u")) {
+    else if (cmd.equals("e")) {
       readDHT11();
       server.println(umid);
       Serial.print(umid);
-    } else if (cmd.equals("x")) {
+    } else if (cmd.equals("r")) {
       readOneWire();
       server.println(oneWire17);
       Serial.print(oneWire17);
-    } else if (cmd.equals("z")) {
+    } else if (cmd.equals("t")) {
       readOneWire();
       server.println(oneWireB6);
       Serial.print(oneWireB6);

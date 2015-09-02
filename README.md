@@ -17,13 +17,13 @@ It's a Zabbix Agent tested and running successfully.
 - Soil humidity sensor
 - Resistors (4.7k and 10k)
 
-###### *A new shield may be built by yourself. 
+###### *A new shield may be built by yourself.
 
 ##How to use:
 
 Check pins used.
 Upload the code to the Arduino.
-Add an item on Zabbix Server. 
+Add an item on Zabbix Server.
  - Type: Zabbix agent.
  - Key: The key for each sensor.
 
@@ -34,7 +34,7 @@ Add an item on Zabbix Server.
 * e - air humidity on DHT11
 * r - air temperature on DS18b20 with serial number ending with 17
 * t - air temperature on DS18b20 with serial number ending with b6
-* y - motion detector
+* y - motion detector (to be implemented)
 
 ##On the code:
 
