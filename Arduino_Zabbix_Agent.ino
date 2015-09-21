@@ -16,13 +16,14 @@
 //----------------------------- Network settings -------------------------------
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xE3, 0x1B };
 IPAddress ip(10, 1, 2, 235);
-//IPAddress ip(10, 1, 10, 38);
+//IPAddress ip(10, 1, 2, 61);
+//IPAddress ip(10, 1, 2, 239);
 IPAddress gateway(10, 1, 2, 254);
-//IPAddress gateway(10, 1, 10, 254);
 IPAddress subnet(255, 255, 255, 0);
 
 //------------ Pins 10, 11, 12 e 13 are used by ethernet shield! ---------------
 #define MAX_CMD_LENGTH 25
+#define LED_PIN 3
 #define DHT11_PIN 4            // DHT11 pin
 #define ONE_WIRE_PIN 5         // One wire pin with a 4.7k resistor
 #define PIR_PIN 6              // PIR pin
@@ -44,13 +45,16 @@ double umid = 0;          // Humidity
 float celsius;
 float oneWire17 = 0;
 float oneWireB6 = 0;
+float oneWireD3 = 0;
 String cmd;               //FOR ZABBIX COMMAND
 String serialNum;
 int counter = 1;          // For testing
 int chk;
+int presence = 0;
 int soil = 0;             // Soil humidity
 int limite = 1;           // Command size. Using 1 for better performance.
 unsigned long dhtLastCheck = 0;
+unsigned long pirLastCheck = 0;
 
 void readOneWire() {
   if ( !ds.search(addr)) {
@@ -108,6 +112,7 @@ void readOneWire() {
   serialNum = String(addr[7], HEX);
   if (serialNum == "17") oneWire17 = celsius;
   else if (serialNum == "b6") oneWireB6 = celsius;
+  else if (serialNum == "d3") oneWireD3 = celsius;
 
   // If Fahrenheit needed, (Fahrenheit = Celsius * 1.8) + 32;
 }
@@ -151,14 +156,20 @@ void readSoil() {
 }
 
 void readPresence() {
-
+  if (digitalRead(PIR_PIN)) {
+    pirLastCheck = millis();
+    presence = 1;
+  } else {
+    if (millis() - pirLastCheck > 60000) {
+      presence = 0;
+    }
+  }
 }
 
 void parseCommand() {     //Commands received by agent on port 10050 parsing
   if (cmd.equals("")) {  }
   else {
     counter = counter + 1;
-    // AGENT ping
     Serial.print(" Tempo: ");
     Serial.print(millis() / 1000);
     Serial.print("\t");
@@ -166,10 +177,11 @@ void parseCommand() {     //Commands received by agent on port 10050 parsing
     Serial.print(cmd);
     Serial.print("\t\t");
     Serial.print("Resposta: ");
+    // AGENT ping
     if (cmd.equals("p")) {
       server.println("1");
     } // Agent version
-    else if (cmd.equals("v")) {
+    else if (cmd.equals("l")) {
       //Serial.println("Version");
       server.println("Arduino Zabbix Agent 1.0");
       delay(100);
@@ -193,10 +205,17 @@ void parseCommand() {     //Commands received by agent on port 10050 parsing
       readOneWire();
       server.println(oneWire17);
       Serial.print(oneWire17);
-    } else if (cmd.equals("t")) {
+    } else if (cmd.equals("f")) {
       readOneWire();
       server.println(oneWireB6);
       Serial.print(oneWireB6);
+    } else if (cmd.equals("v")) {
+      readOneWire();
+      server.println(oneWireD3);
+      Serial.print(oneWireD3);
+    } else if (cmd.equals("t")) {
+      server.println(presence);
+      Serial.print(presence);
     } else { // Agent error
       //server.print("ZBXDZBX_NOTSUPPORTED");
       //server.print("Error");
@@ -217,19 +236,22 @@ void loop() {
       client.stop();
     }
     if (client.available() > 0) {
-      //      Serial.println("Client Available");
-      //      Serial.println("Conection ok");
+      Serial.println("Client Available");
+      Serial.println("Conection ok");
       int clientread = client.read();
-      //Serial.print(clientread);
+      Serial.print(clientread);
       char charcr = clientread;
+      digitalWrite(LED_PIN, HIGH);
       readTelnetCommand(clientread);
+      digitalWrite(LED_PIN, LOW);
     }
   }
 }
 
 void setup() {
+  pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
-  //  Serial.begin(115200);
+  //Serial.begin(115200);
   pinMode(SOIL_PIN, INPUT);
   Ethernet.begin(mac, ip, gateway, subnet);
   server.begin();
