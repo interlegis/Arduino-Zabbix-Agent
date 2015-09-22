@@ -13,7 +13,8 @@ It's a Zabbix Agent tested and running successfully.
 - DS18b20 (or similar)
 - PIR (Passive infrared sensor/Motion detector)
 - Soil humidity sensor
-- Resistors (4.7k and 10k)
+- One led
+- Resistors (1k, 4.7k and 10k)
 
 ###### *A new shield may be built by yourself.
 
@@ -24,6 +25,7 @@ Upload the code to the Arduino.
 Add an item on Zabbix Server.
  - Type: Zabbix agent.
  - Key: The key for each sensor.
+ - It is recommended to check each item on not less than a minute.
 
 ##Keys used on Zabbix:
 
@@ -32,19 +34,22 @@ Add an item on Zabbix Server.
 * e - air humidity on DHT11
 * r - air temperature on DS18b20 with serial number ending with 17
 * f - air temperature on DS18b20 with serial number ending with B6
-* y - motion detector (to be implemented)
+* v - air temperature on DS18b20 with serial number ending with D3
+* t - motion detector
 
 ##On the code:
 
 *Pins 10, 11, 12 and 13 cannot be used. They are used by the ethernet shield*.
 
-Pin 4 is DHT11.
+Pin 3 is the led. 
 
-Pin 5 is DS18b20 (using OneWire)
+Pin 4 is the DHT11.
 
-Pin 6 is PIR
+Pin 5 is one or more DS18b20 (using OneWire).
 
-Pin A0 is soil humidity
+Pin 6 is the PIR.
+
+Pin A0 is the soil humidity sensor.
 
 ###Observation:
 All temperature are in Celsius.
