@@ -160,7 +160,7 @@ void readPresence() {
     pirLastCheck = millis();
     presence = 1;
   } else {
-    if (millis() - pirLastCheck > 60000) {
+    if (millis() - pirLastCheck > 200000) {
       presence = 0;
     }
   }
@@ -246,6 +246,7 @@ void loop() {
       digitalWrite(LED_PIN, LOW);
     }
   }
+  readPresence();
 }
 
 void setup() {
