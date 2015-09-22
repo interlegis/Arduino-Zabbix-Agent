@@ -31,7 +31,7 @@ Add an item on Zabbix Server.
 * w - air temperature on DHT11
 * e - air humidity on DHT11
 * r - air temperature on DS18b20 with serial number ending with 17
-* t - air temperature on DS18b20 with serial number ending with b6
+* f - air temperature on DS18b20 with serial number ending with B6
 * y - motion detector (to be implemented)
 
 ##On the code:
