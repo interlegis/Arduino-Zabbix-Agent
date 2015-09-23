@@ -4,6 +4,22 @@ Using an Arduino Uno v3 and a Zabbix Server to monitor a data center environment
 
 It's a Zabbix Agent tested and running successfully.
 
+* [Materials](#materials)
+* [Schematic](#schematic)
+* [More info](#more-info)
+  * [DHT11](#dht11)
+  * [DS18b20](#ds18b20)
+  * [PIR](#pir)
+  * [Soil humidity sensor](#soil-humidity-sensor)
+  * [Led](#led)
+  * [Observation](#observation)
+* [How to use](#how-to-use)
+* [Keys used on Zabbix](#keys-used-on-zabbix)
+* [On the code](#on-the-code)
+* [Example](#example)
+
+
+
 ## Materials:
 
 - Arduino Uno v3
@@ -17,8 +33,9 @@ It's a Zabbix Agent tested and running successfully.
 
 ###### *A new shield may be built by yourself.
 
-## Schematic
-![Schematic](Sketch.png)
+## Schematic:
+![Schematic](imgs/Sketch.png)
+Schematic done using [Fritzing](www.fritzing.org).
 
 ### More info:
 
@@ -37,6 +54,12 @@ Tricky sensor. It returns `1` when it's dry and `0` when it detects humidity. It
 #### `Led`
 Be careful! Leds are extremely fragile. It needs a 1k resistor in series to make it work. The brightness may vary depending on the model and color. In this project, the led is turned on when the Arduino receives a command and
 is turned off when the value is returned to the server.
+
+### Observation:
+All temperature are in Celsius.
+To convert to Fahrenheit,
+`Temp F = 1.8*(Temp C) + 32`
+
 
 ## How to use:
 
@@ -71,10 +94,9 @@ Pin 6 is the PIR.
 
 Pin A0 is the soil humidity sensor.
 
-### Observation:
-All temperature are in Celsius.
-To convert to Fahrenheit,
-`Temp F = 1.8*(Temp C) + 32`
+## Example
+
+![Zabbix](imgs/GabuinoZabbix.png)
 
 ---
 Zabbix Agent on Arduino Uno v3
