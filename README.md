@@ -35,7 +35,7 @@ It's a Zabbix Agent tested and running successfully.
 
 ## Schematic:
 ![Schematic](imgs/Sketch.png)
-Schematic done using [Fritzing](www.fritzing.org).
+Schematic done using [Fritzing](http://www.fritzing.org).
 
 ### More info:
 
