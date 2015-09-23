@@ -57,8 +57,10 @@ is turned off when the value is returned to the server.
 
 ### Observation:
 All temperature are in Celsius.
-To convert to Fahrenheit,
-`Temp F = 1.8*(Temp C) + 32`
+To convert to Fahrenheit:
+```
+Temp F = 1.8*(Temp C) + 32
+```
 
 
 ## How to use:
@@ -67,8 +69,8 @@ Check pins used.
 Upload the code to the Arduino.
 Add an item on Zabbix Server.
  - Type: Zabbix agent.
- - Key: The key for each sensor.
- - It is recommended to check each item on not less than a minute.
+ - Key: The key for each sensor (`q`, `w`, `e`, `r`, `t` etc).
+ - It is recommended to check each item on not less than once a minute.
 
 ## Keys used on Zabbix:
 
@@ -94,7 +96,7 @@ Pin 6 is the PIR.
 
 Pin A0 is the soil humidity sensor.
 
-## Example
+## Example:
 
 ![Zabbix](imgs/GabuinoZabbix.png)
 
