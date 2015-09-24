@@ -12,7 +12,7 @@ It's a Zabbix Agent tested and running successfully.
   * [PIR](#pir)
   * [Soil humidity sensor](#soil-humidity-sensor)
   * [Led](#led)
-  * [Observation](#observation)
+  * [Observations](#observation)
 * [How to use](#how-to-use)
 * [Keys used on Zabbix](#keys-used-on-zabbix)
 * [On the code](#on-the-code)
@@ -55,7 +55,11 @@ Tricky sensor. It returns `1` when it's dry and `0` when it detects humidity. It
 Be careful! Leds are extremely fragile. It needs a 1k resistor in series to make it work. The brightness may vary depending on the model and color. In this project, the led is turned on when the Arduino receives a command and
 is turned off when the value is returned to the server.
 
-### Observation:
+### Observations:
+Some results are kept for a few seconds to avoid oscillations from the sensors. For example, PIR may get a positive (motion) result and then a null (motion stopped) before Zabbix check. So its value is kept for a few seconds on `1` to allow Zabbix to have enough time to read it.
+
+DS18b20 function is checked on every loop, but the sensors are read only once every 15 seconds. If the request is made on less than 15 seconds after the last one, it simply replies the variable value, making the response much faster.
+
 All temperature are in Celsius.
 To convert to Fahrenheit:
 ```

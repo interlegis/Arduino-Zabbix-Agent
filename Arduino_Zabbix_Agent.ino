@@ -15,16 +15,15 @@
 
 //----------------------------- Network settings -------------------------------
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0xE3, 0x1B };
-IPAddress ip(10, 1, 2, 235);
-//IPAddress ip(10, 1, 2, 61);
-//IPAddress ip(10, 1, 2, 239);
+//IPAddress ip(10, 1, 2, 235);
+IPAddress ip(10, 1, 2, 61);
 IPAddress gateway(10, 1, 2, 254);
 IPAddress subnet(255, 255, 255, 0);
 
 //------------ Pins 10, 11, 12 e 13 are used by ethernet shield! ---------------
 #define MAX_CMD_LENGTH 25
-#define LED_PIN 3
-#define DHT11_PIN 4            // DHT11 pin
+#define LED_PIN 3              // LED pin with 1k resistor
+#define DHT11_PIN 4            // DHT11 pin with a 10k resistor
 #define ONE_WIRE_PIN 5         // One wire pin with a 4.7k resistor
 #define PIR_PIN 6              // PIR pin
 #define SOIL_PIN A0            // Soil humidity sensor pin
@@ -40,93 +39,99 @@ byte present = 0;
 byte type_s;
 byte data[12];
 byte addr[8];
-double temp = 0;          // Temperature
-double umid = 0;          // Humidity
+double temp = 0;                // Temperature
+double umid = 0;                // Humidity
 float celsius;
 float oneWire17 = 0;
 float oneWireB6 = 0;
 float oneWireD3 = 0;
-String cmd;               //FOR ZABBIX COMMAND
+String cmd;                     //FOR ZABBIX COMMAND
 String serialNum;
-int counter = 1;          // For testing
+int counter = 1;                // For testing
 int chk;
 int presence = 0;
-int soil = 0;             // Soil humidity
-int limite = 1;           // Command size. Using 1 for better performance.
+int soil = 0;                   // Soil humidity
+int limite = 1;                 // Command size. Using 1 for better performance.
 unsigned long dhtLastCheck = 0;
 unsigned long pirLastCheck = 0;
+unsigned long oneWireLastCheck = 0;
 
+// Read all DS18b20 and saves the result on variables every 15 seconds.
 void readOneWire() {
-  if ( !ds.search(addr)) {
-    //Serial.println("No more addresses.");
-    ds.reset_search();
-    //delay(250);
-    return;
-  }
-  if (OneWire::crc8(addr, 7) != addr[7]) {
-    Serial.println("CRC is not valid!");
-    return;
-  }
-  switch (addr[0]) {
-    case 0x10:
-      type_s = 1;
-      break;
-    case 0x28:
-      type_s = 0;
-      break;
-    case 0x22:
-      type_s = 0;
-      break;
-    default:
-      Serial.println("Device is not a DS18x20 family device.");
+  if (millis() - oneWireLastCheck > 15000) {
+    if ( !ds.search(addr)) {
+      //Serial.println("No more addresses.");
+      ds.reset_search();
+      //delay(250);
       return;
-  }
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44, 1);      // start conversion, with parasite power on at the end
-  //delay(1000);          // maybe 750ms is enough, maybe not
-  // we might do a ds.depower() here, but the reset will take care of it.
-  present = ds.reset();
-  ds.select(addr);
-  ds.write(0xBE);         // Read Scratchpad
-  for ( i = 0; i < 9; i++) {           // we need 9 bytes
-    data[i] = ds.read();
-  }
-  int16_t raw = (data[1] << 8) | data[0];
-  if (type_s) {
-    raw = raw << 3; // 9 bit resolution default
-    if (data[7] == 0x10) {
-
-      raw = (raw & 0xFFF0) + 12 - data[6];
     }
-  } else {
-    byte cfg = (data[4] & 0x60);
+    if (OneWire::crc8(addr, 7) != addr[7]) {
+      Serial.println("CRC is not valid!");
+      return;
+    }
+    switch (addr[0]) {
+      case 0x10:
+        type_s = 1;
+        break;
+      case 0x28:
+        type_s = 0;
+        break;
+      case 0x22:
+        type_s = 0;
+        break;
+      default:
+        Serial.println("Device is not a DS18x20 family device.");
+        return;
+    }
+    ds.reset();
+    ds.select(addr);
+    ds.write(0x44, 1);      // start conversion, with parasite power on at the end
+    //delay(1000);          // maybe 750ms is enough, maybe not
+    // we might do a ds.depower() here, but the reset will take care of it.
+    present = ds.reset();
+    ds.select(addr);
+    ds.write(0xBE);         // Read Scratchpad
+    for ( i = 0; i < 9; i++) {           // we need 9 bytes
+      data[i] = ds.read();
+    }
+    int16_t raw = (data[1] << 8) | data[0];
+    if (type_s) {
+      raw = raw << 3; // 9 bit resolution default
+      if (data[7] == 0x10) {
 
-    if (cfg == 0x00) raw = raw & ~7;      // 9 bit resolution, 93.75 ms
-    else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
-    else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
+        raw = (raw & 0xFFF0) + 12 - data[6];
+      }
+    } else {
+      byte cfg = (data[4] & 0x60);
+
+      if (cfg == 0x00) raw = raw & ~7;      // 9 bit resolution, 93.75 ms
+      else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
+      else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
+    }
+    celsius = (float)raw / 16.0;
+    //Serial.print(celsius);
+    //Serial.println(" Celsius");
+    serialNum = String(addr[7], HEX);
+    if (serialNum == "17") oneWire17 = celsius;
+    else if (serialNum == "b6") oneWireB6 = celsius;
+    else if (serialNum == "d3") oneWireD3 = celsius;
+    // If Fahrenheit needed, (Fahrenheit = Celsius * 1.8) + 32;
+
+    oneWireLastCheck = millis();
   }
-  celsius = (float)raw / 16.0;
-  //Serial.print(celsius);
-  //Serial.println(" Celsius");
-  serialNum = String(addr[7], HEX);
-  if (serialNum == "17") oneWire17 = celsius;
-  else if (serialNum == "b6") oneWireB6 = celsius;
-  else if (serialNum == "d3") oneWireD3 = celsius;
-
-  // If Fahrenheit needed, (Fahrenheit = Celsius * 1.8) + 32;
 }
 
+// Read DHT11 every 15 seconds and save values on variables
 void readDHT11() {
-  if (millis() - dhtLastCheck > 10000) {
+ if (millis() - dhtLastCheck > 15000) {
     chk = DHT.read11(DHT11_PIN);
     switch (chk) {
       case DHTLIB_OK:
         break;
-        //case DHTLIB_ERROR_CHECKSUM:
+      case DHTLIB_ERROR_CHECKSUM:
         Serial.print("Checksum error,\t");
         break;
-        //case DHTLIB_ERROR_TIMEOUT:
+      case DHTLIB_ERROR_TIMEOUT:
         Serial.print("Time out error,\t");
         break;
       default:
@@ -139,6 +144,7 @@ void readDHT11() {
   }
 }
 
+// Read command received.
 void readTelnetCommand(char c) {
   if (cmd.length() == MAX_CMD_LENGTH) {
     cmd = "";
@@ -151,10 +157,12 @@ void readTelnetCommand(char c) {
   }
 }
 
+// Read soil humidity sensor.
 void readSoil() {
   soil = digitalRead(SOIL_PIN);
 }
 
+// Read PIR and if positive, keep the value for 200 seconds.
 void readPresence() {
   if (digitalRead(PIR_PIN)) {
     pirLastCheck = millis();
@@ -166,7 +174,8 @@ void readPresence() {
   }
 }
 
-void parseCommand() {     //Commands received by agent on port 10050 parsing
+//Commands received by agent on port 10050 parsing
+void parseCommand() {
   if (cmd.equals("")) {  }
   else {
     counter = counter + 1;
@@ -202,15 +211,12 @@ void parseCommand() {     //Commands received by agent on port 10050 parsing
       server.println(umid);
       Serial.print(umid);
     } else if (cmd.equals("r")) {
-      readOneWire();
       server.println(oneWire17);
       Serial.print(oneWire17);
     } else if (cmd.equals("f")) {
-      readOneWire();
       server.println(oneWireB6);
       Serial.print(oneWireB6);
     } else if (cmd.equals("v")) {
-      readOneWire();
       server.println(oneWireD3);
       Serial.print(oneWireD3);
     } else if (cmd.equals("t")) {
@@ -226,6 +232,7 @@ void parseCommand() {     //Commands received by agent on port 10050 parsing
   }
 }
 
+// The loop that Arduino runs forever after the setup() function.
 void loop() {
   client = server.available();
   if (client) {
@@ -247,8 +254,10 @@ void loop() {
     }
   }
   readPresence();
+  readOneWire();
 }
 
+// This function runs once only, when the Arduino is turned on or reseted.
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
