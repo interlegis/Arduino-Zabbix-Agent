@@ -88,7 +88,15 @@ Add an item on Zabbix Server.
 
 ## On the code:
 
-*Pins 10, 11, 12 and 13 cannot be used. They are used by the ethernet shield*.
+Set the IP address, the gateway and the MAC address to be used by the agent.
+
+Check how many sensors will be used and add them to the code if necessary. To do this:
+* Set a pin using `#define`.
+* Write a function to read the sensor if necessary.
+* Choose a letter to be used as a command for each sensor function. Make sure the letter is not used anywhere else!
+* On `parseCommand`, add the function to be executed when receiving the command defined on the step before.
+
+__*Pins 10, 11, 12 and 13 cannot be used. They are used by the ethernet shield*.__
 
 Pin 3 is the led.
 
@@ -106,3 +114,5 @@ Pin A0 is the soil humidity sensor.
 
 ---
 Zabbix Agent on Arduino Uno v3
+
+By [GabRF.com](http://gabrf.com)
