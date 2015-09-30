@@ -50,15 +50,18 @@ String serialNum;
 int counter = 1;                // For testing
 int chk;
 int presence = 0;
+int lastPresence = 0;
 int soil = 0;                   // Soil humidity
 int limite = 1;                 // Command size. Using 1 for better performance.
+int waitTime = 15000;           // Default waiting time before reading sensor again.
+int pirWaitTime = 200000;       // Default waiting time for PIR.
 unsigned long dhtLastCheck = 0;
 unsigned long pirLastCheck = 0;
 unsigned long oneWireLastCheck = 0;
 
 // Read all DS18b20 and saves the result on variables every 15 seconds.
 void readOneWire() {
-  if (millis() - oneWireLastCheck > 15000) {
+  if (millis() - oneWireLastCheck > waitTime) {
     if ( !ds.search(addr)) {
       //Serial.println("No more addresses.");
       ds.reset_search();
@@ -123,7 +126,7 @@ void readOneWire() {
 
 // Read DHT11 every 15 seconds and save values on variables
 void readDHT11() {
- if (millis() - dhtLastCheck > 15000) {
+ if (millis() - dhtLastCheck > waitTime) {
     chk = DHT.read11(DHT11_PIN);
     switch (chk) {
       case DHTLIB_OK:
@@ -162,14 +165,19 @@ void readSoil() {
   soil = digitalRead(SOIL_PIN);
 }
 
-// Read PIR and if positive, keep the value for 200 seconds.
+// Read PIR and if positive, keep the value for pirWaitTime seconds.
 void readPresence() {
   if (digitalRead(PIR_PIN)) {
     pirLastCheck = millis();
+    lastPresence = 1;
+  }
+  if (digitalRead(PIR_PIN) && (lastPresence)) {
     presence = 1;
-  } else {
-    if (millis() - pirLastCheck > 200000) {
+  }
+  else {
+    if (millis() - pirLastCheck > pirWaitTime) {
       presence = 0;
+      lastPresence = 0;
     }
   }
 }
@@ -205,6 +213,7 @@ void parseCommand() {
       readDHT11();
       Serial.print(temp);
       server.println(temp);
+      dhtLastCheck = millis() - waitTime;
     } // Agent air humidity
     else if (cmd.equals("e")) {
       readDHT11();
@@ -216,12 +225,16 @@ void parseCommand() {
     } else if (cmd.equals("f")) {
       server.println(oneWireB6);
       Serial.print(oneWireB6);
+      oneWireLastCheck = oneWireLastCheck - (waitTime/3);
     } else if (cmd.equals("v")) {
       server.println(oneWireD3);
       Serial.print(oneWireD3);
+      oneWireLastCheck = oneWireLastCheck - (waitTime/3);
     } else if (cmd.equals("t")) {
       server.println(presence);
       Serial.print(presence);
+      oneWireLastCheck = oneWireLastCheck - (waitTime/3);
+      pirLastCheck = millis() - pirWaitTime;
     } else { // Agent error
       //server.print("ZBXDZBX_NOTSUPPORTED");
       //server.print("Error");
@@ -253,8 +266,12 @@ void loop() {
       digitalWrite(LED_PIN, LOW);
     }
   }
-  readPresence();
-  readOneWire();
+  if (millis()%2) {
+    readPresence();
+  }
+  else {
+    readOneWire();
+  }
 }
 
 // This function runs once only, when the Arduino is turned on or reseted.
